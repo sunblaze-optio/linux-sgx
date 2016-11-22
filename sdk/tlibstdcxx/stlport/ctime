@@ -1,53 +1,74 @@
+// -*- C++ -*-
+//===---------------------------- ctime -----------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP_CTIME
+#define _LIBCPP_CTIME
+
 /*
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+    ctime synopsis
 
-#ifndef _STLP_CTIME
+Macros:
 
-#ifndef _STLP_OUTERMOST_HEADER_ID
-#  define _STLP_OUTERMOST_HEADER_ID 0x118
-#  include <stl/_prolog.h>
-#elif (_STLP_OUTERMOST_HEADER_ID == 0x118) && ! defined (_STLP_DONT_POP_HEADER_ID)
-#  define _STLP_DONT_POP_HEADER_ID
-#  define _STLP_CTIME
+    NULL
+    CLOCKS_PER_SEC
+
+namespace std
+{
+
+Types:
+
+    clock_t
+    size_t
+    time_t
+    tm
+
+clock_t clock();
+double difftime(time_t time1, time_t time0);
+time_t mktime(tm* timeptr);
+time_t time(time_t* timer);
+char* asctime(const tm* timeptr);
+char* ctime(const time_t* timer);
+tm*    gmtime(const time_t* timer);
+tm* localtime(const time_t* timer);
+size_t strftime(char* restrict s, size_t maxsize, const char* restrict format,
+                const tm* restrict timeptr);
+
+}  // std
+
+*/
+
+#include <__config>
+#include <time.h>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
 #endif
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x118) && !defined (_STLP_DONT_POP_HEADER_ID)
-#  ifndef _STLP_INTERNAL_CTIME
-#    include <stl/_ctime.h>
-#  endif
+_LIBCPP_BEGIN_NAMESPACE_STD
+
+using ::clock_t;
+using ::size_t;
+using ::time_t;
+using ::tm;
+using ::clock;
+using ::difftime;
+using ::mktime;
+using ::time;
+#ifndef _LIBCPP_HAS_NO_THREAD_UNSAFE_C_FUNCTIONS
+using ::asctime;
+using ::ctime;
+using ::gmtime;
+using ::localtime;
 #endif
+using ::strftime;
 
-#if (_STLP_OUTERMOST_HEADER_ID != 0x118) || defined (_STLP_DONT_POP_HEADER_ID) || defined (_STLP_IMPORT_VENDOR_STD)
-#  if defined (_STLP_HAS_INCLUDE_NEXT)
-#    include_next <ctime>
-#  else
-#    include _STLP_NATIVE_CPP_C_HEADER(ctime)
-#  endif
-#endif
+_LIBCPP_END_NAMESPACE_STD
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x118)
-#  if !defined (_STLP_DONT_POP_HEADER_ID)
-#    include <stl/_epilog.h>
-#    undef _STLP_OUTERMOST_HEADER_ID
-#  else
-#    undef _STLP_DONT_POP_HEADER_ID
-#  endif
-#endif
-
-#endif /* _STLP_CTIME */
-
-// Local Variables:
-// mode:C++
-// End:
+#endif  // _LIBCPP_CTIME

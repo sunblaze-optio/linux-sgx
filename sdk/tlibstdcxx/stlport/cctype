@@ -1,47 +1,121 @@
+// -*- C++ -*-
+//===---------------------------- cctype ----------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP_CCTYPE
+#define _LIBCPP_CCTYPE
+
 /*
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+    cctype synopsis
 
-#ifndef _STLP_CCTYPE
+namespace std
+{
 
-#ifndef _STLP_OUTERMOST_HEADER_ID
-#  define _STLP_OUTERMOST_HEADER_ID 0x104
-#  define _STLP_CCTYPE
-#  include <stl/_prolog.h>
+int isalnum(int c);
+int isalpha(int c);
+int isblank(int c);  // C99
+int iscntrl(int c);
+int isdigit(int c);
+int isgraph(int c);
+int islower(int c);
+int isprint(int c);
+int ispunct(int c);
+int isspace(int c);
+int isupper(int c);
+int isxdigit(int c);
+int tolower(int c);
+int toupper(int c);
+
+}  // std
+*/
+
+#include <__config>
+#include <ctype.h>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
 #endif
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x104 )
-#  ifndef _STLP_INTERNAL_CCTYPE
-#    include <stl/_cctype.h>
-#  endif
+_LIBCPP_BEGIN_NAMESPACE_STD
+
+#ifdef isalnum
+#undef isalnum
 #endif
 
-#if (_STLP_OUTERMOST_HEADER_ID != 0x104) || defined (_STLP_IMPORT_VENDOR_STD)
-#  if defined (_STLP_HAS_INCLUDE_NEXT)
-#    include_next <cctype>
-#  else
-#    include _STLP_NATIVE_CPP_C_HEADER(cctype)
-#  endif
+#ifdef isalpha
+#undef isalpha
 #endif
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x104 )
-#  include <stl/_epilog.h>
-#  undef _STLP_OUTERMOST_HEADER_ID
+#ifdef isblank
+#undef isblank
 #endif
 
-#endif /* _STLP_CCTYPE */
+#ifdef iscntrl
+#undef iscntrl
+#endif
 
-// Local Variables:
-// mode:C++
-// End:
+#ifdef isdigit
+#undef isdigit
+#endif
+
+#ifdef isgraph
+#undef isgraph
+#endif
+
+#ifdef islower
+#undef islower
+#endif
+
+#ifdef isprint
+#undef isprint
+#endif
+
+#ifdef ispunct
+#undef ispunct
+#endif
+
+#ifdef isspace
+#undef isspace
+#endif
+
+#ifdef isupper
+#undef isupper
+#endif
+
+#ifdef isxdigit
+#undef isxdigit
+#endif
+
+#ifdef tolower
+#undef tolower
+#endif
+
+#ifdef toupper
+#undef toupper
+#endif
+
+
+using ::isalnum;
+using ::isalpha;
+using ::isblank;
+using ::iscntrl;
+using ::isdigit;
+using ::isgraph;
+using ::islower;
+using ::isprint;
+using ::ispunct;
+using ::isspace;
+using ::isupper;
+using ::isxdigit;
+using ::tolower;
+using ::toupper;
+
+_LIBCPP_END_NAMESPACE_STD
+
+#endif  // _LIBCPP_CCTYPE

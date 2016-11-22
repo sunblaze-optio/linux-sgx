@@ -1,45 +1,70 @@
+// -*- C++ -*-
+//===--------------------------- cfloat -----------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP_CFLOAT
+#define _LIBCPP_CFLOAT
+
 /*
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+    cfloat synopsis
 
-#ifndef _STLP_CFLOAT
-#define _STLP_CFLOAT
+Macros:
 
-#ifndef _STLP_OUTERMOST_HEADER_ID
-#  define _STLP_OUTERMOST_HEADER_ID 0x106
-#  include <stl/_prolog.h>
+    FLT_ROUNDS
+    FLT_EVAL_METHOD     // C99
+    FLT_RADIX
+
+    FLT_MANT_DIG
+    DBL_MANT_DIG
+    LDBL_MANT_DIG
+
+    DECIMAL_DIG         // C99
+
+    FLT_DIG
+    DBL_DIG
+    LDBL_DIG
+
+    FLT_MIN_EXP
+    DBL_MIN_EXP
+    LDBL_MIN_EXP
+
+    FLT_MIN_10_EXP
+    DBL_MIN_10_EXP
+    LDBL_MIN_10_EXP
+
+    FLT_MAX_EXP
+    DBL_MAX_EXP
+    LDBL_MAX_EXP
+
+    FLT_MAX_10_EXP
+    DBL_MAX_10_EXP
+    LDBL_MAX_10_EXP
+
+    FLT_MAX
+    DBL_MAX
+    LDBL_MAX
+
+    FLT_EPSILON
+    DBL_EPSILON
+    LDBL_EPSILON
+
+    FLT_MIN
+    DBL_MIN
+    LDBL_MIN
+
+*/
+
+#include <__config>
+#include <float.h>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
 #endif
 
-// Borland defines some implementation constants in std:: namespace,
-// we do not want to import them.
-#if defined  (_STLP_USE_NEW_C_HEADERS) && !defined (__BORLANDC__)
-#  if defined (_STLP_HAS_INCLUDE_NEXT)
-#    include_next <cfloat>
-#  else
-#    include _STLP_NATIVE_CPP_C_HEADER(cfloat)
-#  endif
-#else
-#  include <float.h>
-#endif
-
-#if (_STLP_OUTERMOST_HEADER_ID == 0x106 )
-#  include <stl/_epilog.h>
-#  undef _STLP_OUTERMOST_HEADER_ID
-#endif
-
-#endif /* _STLP_CFLOAT */
-
-// Local Variables:
-// mode:C++
-// End:
+#endif  // _LIBCPP_CFLOAT

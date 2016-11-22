@@ -1,39 +1,65 @@
+// -*- C++ -*-
+//===--------------------------- limits.h ---------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP_LIMITS_H
+#define _LIBCPP_LIMITS_H
+
 /*
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+    limits.h synopsis
 
-#if !defined (_STLP_OUTERMOST_HEADER_ID)
-#  define _STLP_OUTERMOST_HEADER_ID 0x201
-#  include <stl/_cprolog.h>
-#elif (_STLP_OUTERMOST_HEADER_ID == 0x201) && ! defined (_STLP_DONT_POP_HEADER_ID)
-#  define _STLP_DONT_POP_HEADER_ID
+Macros:
+
+    CHAR_BIT
+    SCHAR_MIN
+    SCHAR_MAX
+    UCHAR_MAX
+    CHAR_MIN
+    CHAR_MAX
+    MB_LEN_MAX
+    SHRT_MIN
+    SHRT_MAX
+    USHRT_MAX
+    INT_MIN
+    INT_MAX
+    UINT_MAX
+    LONG_MIN
+    LONG_MAX
+    ULONG_MAX
+    LLONG_MIN   // C99
+    LLONG_MAX   // C99
+    ULLONG_MAX  // C99
+
+*/
+
+#include <__config>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
 #endif
 
-#if defined(_STLP_WCE_EVC3)
-struct _exception;
-#endif
-
-#if defined (_STLP_HAS_INCLUDE_NEXT)
-#  include_next <limits.h>
+#ifndef __GNUC__
+#include_next <limits.h>
 #else
-#  include _STLP_NATIVE_C_HEADER(limits.h)
-#endif
+// GCC header limits.h recursively includes itself through another header called
+// syslimits.h for some reason. This setup breaks down if we directly
+// #include_next GCC's limits.h (reasons not entirely clear to me). Therefore,
+// we manually re-create the necessary include sequence below:
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x201)
-#  if ! defined (_STLP_DONT_POP_HEADER_ID)
-#    include <stl/_epilog.h>
-#    undef  _STLP_OUTERMOST_HEADER_ID
-#  endif
-#  undef  _STLP_DONT_POP_HEADER_ID
-#endif
+// Get the system limits.h defines (force recurse into the next level)
+#define _GCC_LIMITS_H_
+#define _GCC_NEXT_LIMITS_H
+#include_next <limits.h>
+
+// Get the ISO C defines
+#undef _GCC_LIMITS_H_
+#include_next <limits.h>
+#endif // __GNUC__
+
+#endif  // _LIBCPP_LIMITS_H

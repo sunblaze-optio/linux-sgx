@@ -1,55 +1,104 @@
-/*
- * Copyright (c) 1999
- * Silicon Graphics Computer Systems, Inc.
- *
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+//===-------------------------- ios.cpp -----------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
 
-#include "stlport_prefix.h"
+#include "__config"
 
-#include <algorithm>
-#include <ios>
-#include <locale>
-#include <ostream> // for __get_ostreambuf definition
+#include "ios"
 
-#include "aligned_buffer.h"
+#include <stdlib.h>
 
-_STLP_BEGIN_NAMESPACE
+#include "__locale"
+#include "algorithm"
+#include "include/config_elast.h"
+#include "istream"
+#include "limits"
+#include "memory"
+#include "new"
+#include "streambuf"
+#include "string"
 
-//----------------------------------------------------------------------
-// ios_base members
+_LIBCPP_BEGIN_NAMESPACE_STD
 
-// class ios_base::failure, a subclass of exception.  It's used solely
-// for reporting errors.
+template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_ios<char>;
+template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_ios<wchar_t>;
 
-ios_base::failure::failure(const string& s)
-  : __Named_exception(s)
-{}
+template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_streambuf<char>;
+template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_streambuf<wchar_t>;
 
-ios_base::failure::~failure() _STLP_NOTHROW_INHERENTLY {}
+template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_istream<char>;
+template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_istream<wchar_t>;
 
-#if !defined (_STLP_STATIC_CONST_INIT_BUG) && !defined (_STLP_NO_STATIC_CONST_DEFINITION)
-// Definitions of ios_base's formatting flags.
-const ios_base::fmtflags ios_base::left;
-const ios_base::fmtflags ios_base::right;
-const ios_base::fmtflags ios_base::internal;
-const ios_base::fmtflags ios_base::dec;
-const ios_base::fmtflags ios_base::hex;
-const ios_base::fmtflags ios_base::oct;
-const ios_base::fmtflags ios_base::fixed;
-const ios_base::fmtflags ios_base::scientific;
+template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_ostream<char>;
+template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_ostream<wchar_t>;
+
+template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_iostream<char>;
+
+class _LIBCPP_HIDDEN __iostream_category
+    : public __do_message
+{
+public:
+    virtual const char* name() const _NOEXCEPT;
+    virtual string message(int ev) const;
+};
+
+const char*
+__iostream_category::name() const _NOEXCEPT
+{
+    return "iostream";
+}
+
+string
+__iostream_category::message(int ev) const
+{
+    if (ev != static_cast<int>(io_errc::stream)
+#ifdef _LIBCPP_ELAST
+        && ev <= _LIBCPP_ELAST
+#endif  // _LIBCPP_ELAST
+        )
+        return __do_message::message(ev);
+    return string("unspecified iostream_category error");
+}
+
+const error_category&
+iostream_category() _NOEXCEPT
+{
+    static __iostream_category s;
+    return s;
+}
+
+// ios_base::failure
+
+ios_base::failure::failure(const string& msg, const error_code& ec)
+    : system_error(ec, msg)
+{
+}
+
+ios_base::failure::failure(const char* msg, const error_code& ec)
+    : system_error(ec, msg)
+{
+}
+
+ios_base::failure::~failure() throw()
+{
+}
+
+// ios_base locale
+
 const ios_base::fmtflags ios_base::boolalpha;
+const ios_base::fmtflags ios_base::dec;
+const ios_base::fmtflags ios_base::fixed;
+const ios_base::fmtflags ios_base::hex;
+const ios_base::fmtflags ios_base::internal;
+const ios_base::fmtflags ios_base::left;
+const ios_base::fmtflags ios_base::oct;
+const ios_base::fmtflags ios_base::right;
+const ios_base::fmtflags ios_base::scientific;
 const ios_base::fmtflags ios_base::showbase;
 const ios_base::fmtflags ios_base::showpoint;
 const ios_base::fmtflags ios_base::showpos;
@@ -60,13 +109,11 @@ const ios_base::fmtflags ios_base::adjustfield;
 const ios_base::fmtflags ios_base::basefield;
 const ios_base::fmtflags ios_base::floatfield;
 
-// Definitions of ios_base's state flags.
-const ios_base::iostate ios_base::goodbit;
 const ios_base::iostate ios_base::badbit;
 const ios_base::iostate ios_base::eofbit;
 const ios_base::iostate ios_base::failbit;
+const ios_base::iostate ios_base::goodbit;
 
-// Definitions of ios_base's openmode flags.
 const ios_base::openmode ios_base::app;
 const ios_base::openmode ios_base::ate;
 const ios_base::openmode ios_base::binary;
@@ -74,245 +121,346 @@ const ios_base::openmode ios_base::in;
 const ios_base::openmode ios_base::out;
 const ios_base::openmode ios_base::trunc;
 
-// Definitions of ios_base's seekdir flags.
-const ios_base::seekdir ios_base::beg;
-const ios_base::seekdir ios_base::cur;
-const ios_base::seekdir ios_base::end;
-
-#endif
-
-// Internal functions used for managing exponentially-growing arrays of
-// POD types.
-
-// array is a pointer to N elements of type PODType.  Expands the array,
-// if necessary, so that array[index] is meaningful.  All new elements are
-// initialized to zero.  Returns a pointer to the new array, and the new
-// size.
-
-template <class PODType>
-static pair<PODType*, size_t>
-_Stl_expand_array(PODType* __array, size_t N, int index) {
-  if ((int)N < index + 1) {
-    size_t new_N = (max)(2 * N, size_t(index + 1));
-    PODType* new_array
-      = __STATIC_CAST(PODType*,realloc(__array, new_N * sizeof(PODType)));
-    if (new_array) {
-      fill(new_array + N, new_array + new_N, PODType());
-      return pair<PODType*, size_t>(new_array, new_N);
+void
+ios_base::__call_callbacks(event ev)
+{
+    for (size_t i = __event_size_; i;)
+    {
+        --i;
+        __fn_[i](ev, *this, __index_[i]);
     }
-    else
-      return pair<PODType*, size_t>(__STATIC_CAST(PODType*,0), 0);
-  }
-  else
-    return pair<PODType*, size_t>(__array, N);
 }
 
-// array is a pointer to N elements of type PODType.  Allocate a new
-// array of N elements, copying the values from the old array to the new.
-// Return a pointer to the new array.  It is assumed that array is non-null
-// and N is nonzero.
-template <class PODType>
-static PODType* _Stl_copy_array(const PODType* __array, size_t N) {
-  PODType* result = __STATIC_CAST(PODType*,malloc(N * sizeof(PODType)));
-  if (result)
-    copy(__array, __array + N, result);
-  return result;
+// locale
+
+locale
+ios_base::imbue(const locale& newloc)
+{
+    static_assert(sizeof(locale) == sizeof(__loc_), "");
+    locale& loc_storage = *reinterpret_cast<locale*>(&__loc_);
+    locale oldloc = loc_storage;
+    loc_storage = newloc;
+    __call_callbacks(imbue_event);
+    return oldloc;
 }
 
-locale ios_base::imbue(const locale& loc) {
-  if (loc != _M_locale) {
-    locale previous = _M_locale;
-    _M_locale = loc;
-    _M_invoke_callbacks(imbue_event);
-    return previous;
-  }
-  else {
-    _M_invoke_callbacks(imbue_event);
-    return _M_locale;
-  }
+locale
+ios_base::getloc() const
+{
+    const locale& loc_storage = *reinterpret_cast<const locale*>(&__loc_);
+    return loc_storage;
 }
 
-int _STLP_CALL ios_base::xalloc() {
-#if defined (_STLP_THREADS) && \
-    defined (_STLP_WIN32THREADS) && defined (_STLP_NEW_PLATFORM_SDK)
-  static volatile __stl_atomic_t _S_index = 0;
-  return _STLP_ATOMIC_INCREMENT(&_S_index);
+// xalloc
+#if defined(_LIBCPP_HAS_C_ATOMIC_IMP) && !defined(_LIBCPP_HAS_NO_THREADS)
+atomic<int> ios_base::__xindex_ = ATOMIC_VAR_INIT(0);
 #else
-  static int _S_index = 0;
-  static _STLP_STATIC_MUTEX __lock _STLP_MUTEX_INITIALIZER;
-  _STLP_auto_lock sentry(__lock);
-  return _S_index++;
-#endif
-}
-
-long& ios_base::iword(int index) {
-  static long dummy = 0;
-
-  pair<long*, size_t> tmp = _Stl_expand_array(_M_iwords, _M_num_iwords, index);
-  if (tmp.first) {              // The allocation, if any, succeeded.
-    _M_iwords = tmp.first;
-    _M_num_iwords = tmp.second;
-    return _M_iwords[index];
-  }
-  else {
-    _M_setstate_nothrow(badbit);
-    _M_check_exception_mask();
-    return dummy;
-  }
-}
-
-
-void*& ios_base::pword(int index) {
-  static void* dummy = 0;
-
-  pair<void**, size_t> tmp = _Stl_expand_array(_M_pwords, _M_num_pwords, index);
-  if (tmp.first) {              // The allocation, if any, succeeded.
-    _M_pwords = tmp.first;
-    _M_num_pwords = tmp.second;
-    return _M_pwords[index];
-  }
-  else {
-    _M_setstate_nothrow(badbit);
-    _M_check_exception_mask();
-    return dummy;
-  }
-}
-
-void ios_base::register_callback(event_callback __fn, int index) {
-  pair<pair<event_callback, int>*, size_t> tmp
-    = _Stl_expand_array(_M_callbacks, _M_num_callbacks, (int)_M_callback_index /* fbp: index ??? */ );
-  if (tmp.first) {
-    _M_callbacks = tmp.first;
-    _M_num_callbacks = tmp.second;
-    _M_callbacks[_M_callback_index++] = make_pair(__fn, index);
-  }
-  else {
-    _M_setstate_nothrow(badbit);
-    _M_check_exception_mask();
-  }
-}
-
-// Invokes all currently registered callbacks for a particular event.
-// Behaves correctly even if one of the callbacks adds a new callback.
-void ios_base::_M_invoke_callbacks(event E) {
-  for (size_t i = _M_callback_index; i > 0; --i) {
-    event_callback f = _M_callbacks[i-1].first;
-    int n = _M_callbacks[i-1].second;
-    f(E, *this, n);
-  }
-}
-
-// This function is called if the state, rdstate(), has a bit set
-// that is also set in the exception mask exceptions().
-void ios_base::_M_throw_failure() {
-  const char* arg ;
-# if 0
-  char buffer[256];
-  char* ptr;
-  strcpy(buffer, "ios failure: rdstate = 0x");
-  ptr = __write_integer(buffer+strlen(buffer), ios_base::hex, __STATIC_CAST(unsigned long,_M_iostate));
-  strcpy(ptr, " mask = 0x");
-  ptr = __write_integer(buffer+strlen(buffer), ios_base::hex, __STATIC_CAST(unsigned long,_M_exception_mask));
-  *ptr = 0;
-  arg = buffer;
-# else
-  arg = "ios failure";
-# endif
-
-# ifndef _STLP_USE_EXCEPTIONS
-  fputs(arg, stderr);
-# else
-  throw failure(arg);
-# endif
-}
-
-// Copy x's state to *this.  This member function is used in the
-// implementation of basic_ios::copyfmt.  Does not copy _M_exception_mask
-// or _M_iostate.
-void ios_base::_M_copy_state(const ios_base& x) {
-  _M_fmtflags  = x._M_fmtflags; // Copy the flags, except for _M_iostate
-  _M_openmode  = x._M_openmode; // and _M_exception_mask.
-  _M_seekdir   = x._M_seekdir;
-  _M_precision = x._M_precision;
-  _M_width     = x._M_width;
-  _M_locale    = x._M_locale;
-
-  if (x._M_callbacks) {
-    pair<event_callback, int>* tmp = _Stl_copy_array(x._M_callbacks, x._M_callback_index);
-    if (tmp) {
-      free(_M_callbacks);
-      _M_callbacks = tmp;
-      _M_num_callbacks = _M_callback_index = x._M_callback_index;
-    }
-    else {
-      _M_setstate_nothrow(badbit);
-      _M_check_exception_mask();
-    }
-  }
-
-  if (x._M_iwords) {
-    long* tmp = _Stl_copy_array(x._M_iwords, x._M_num_iwords);
-    if (tmp) {
-      free(_M_iwords);
-      _M_iwords = tmp;
-      _M_num_iwords = x._M_num_iwords;
-    }
-    else {
-      _M_setstate_nothrow(badbit);
-      _M_check_exception_mask();
-    }
-  }
-
-  if (x._M_pwords) {
-    void** tmp = _Stl_copy_array(x._M_pwords, x._M_num_pwords);
-    if (tmp) {
-      free(_M_pwords);
-      _M_pwords = tmp;
-      _M_num_pwords = x._M_num_pwords;
-    }
-    else {
-      _M_setstate_nothrow(badbit);
-      _M_check_exception_mask();
-    }
-  }
-}
-
-// ios's (protected) default constructor.  The standard says that all
-// fields have indeterminate values; we initialize them to zero for
-// simplicity.  The only thing that really matters is that the arrays
-// are all initially null pointers, and the array element counts are all
-// initially zero.
-ios_base::ios_base()
-  : _M_fmtflags(0), _M_iostate(0), _M_openmode(0), _M_seekdir(0),
-    _M_exception_mask(0),
-    _M_precision(0), _M_width(0),
-    _M_locale(),
-    _M_callbacks(0), _M_num_callbacks(0), _M_callback_index(0),
-    _M_iwords(0), _M_num_iwords(0),
-    _M_pwords(0),
-    _M_num_pwords(0)
-{}
-
-// ios's destructor.
-ios_base::~ios_base() {
-  _M_invoke_callbacks(erase_event);
-  free(_M_callbacks);
-  free(_M_iwords);
-  free(_M_pwords);
-}
-
-//----------------------------------------------------------------------
-// Force instantiation of basic_ios
-// For DLL exports, they are already instantiated.
-#if !defined(_STLP_NO_FORCE_INSTANTIATE)
-template class _STLP_CLASS_DECLSPEC basic_ios<char, char_traits<char> >;
-#  if !defined (_STLP_NO_WCHAR_T)
-template class _STLP_CLASS_DECLSPEC basic_ios<wchar_t, char_traits<wchar_t> >;
-#  endif /* _STLP_NO_WCHAR_T */
+int ios_base::__xindex_ = 0;
 #endif
 
-_STLP_END_NAMESPACE
+template <typename _Tp>
+static size_t __ios_new_cap(size_t __req_size, size_t __current_cap)
+{ // Precondition: __req_size > __current_cap
+	const size_t mx = std::numeric_limits<size_t>::max() / sizeof(_Tp);
+	if (__req_size < mx/2)
+		return _VSTD::max(2 * __current_cap, __req_size);
+	else
+		return mx;
+}
 
-// Local Variables:
-// mode:C++
-// End:
+int
+ios_base::xalloc()
+{
+    return __xindex_++;
+}
+
+long&
+ios_base::iword(int index)
+{
+    size_t req_size = static_cast<size_t>(index)+1;
+    if (req_size > __iarray_cap_)
+    {
+        size_t newcap = __ios_new_cap<long>(req_size, __iarray_cap_);
+        long* iarray = static_cast<long*>(realloc(__iarray_, newcap * sizeof(long)));
+        if (iarray == 0)
+        {
+            setstate(badbit);
+            static long error;
+            error = 0;
+            return error;
+        }
+        __iarray_ = iarray;
+        for (long* p = __iarray_ + __iarray_size_; p < __iarray_ + newcap; ++p)
+            *p = 0;
+        __iarray_cap_ = newcap;
+    }
+    __iarray_size_ = max<size_t>(__iarray_size_, req_size);
+    return __iarray_[index];
+}
+
+void*&
+ios_base::pword(int index)
+{
+    size_t req_size = static_cast<size_t>(index)+1;
+    if (req_size > __parray_cap_)
+    {
+        size_t newcap = __ios_new_cap<void *>(req_size, __iarray_cap_);
+        void** parray = static_cast<void**>(realloc(__parray_, newcap * sizeof(void *)));
+        if (parray == 0)
+        {
+            setstate(badbit);
+            static void* error;
+            error = 0;
+            return error;
+        }
+        __parray_ = parray;
+        for (void** p = __parray_ + __parray_size_; p < __parray_ + newcap; ++p)
+            *p = 0;
+        __parray_cap_ = newcap;
+    }
+    __parray_size_ = max<size_t>(__parray_size_, req_size);
+    return __parray_[index];
+}
+
+// register_callback
+
+void
+ios_base::register_callback(event_callback fn, int index)
+{
+    size_t req_size = __event_size_ + 1;
+    if (req_size > __event_cap_)
+    {
+        size_t newcap = __ios_new_cap<event_callback>(req_size, __event_cap_);
+        event_callback* fns = static_cast<event_callback*>(realloc(__fn_, newcap * sizeof(event_callback)));
+        if (fns == 0)
+            setstate(badbit);
+        __fn_ = fns;
+        int* indxs = static_cast<int *>(realloc(__index_, newcap * sizeof(int)));
+        if (indxs == 0)
+            setstate(badbit);
+        __index_ = indxs;
+        __event_cap_ = newcap;
+    }
+    __fn_[__event_size_] = fn;
+    __index_[__event_size_] = index;
+    ++__event_size_;
+}
+
+ios_base::~ios_base()
+{
+    __call_callbacks(erase_event);
+    locale& loc_storage = *reinterpret_cast<locale*>(&__loc_);
+    loc_storage.~locale();
+    free(__fn_);
+    free(__index_);
+    free(__iarray_);
+    free(__parray_);
+}
+
+// iostate
+
+void
+ios_base::clear(iostate state)
+{
+    if (__rdbuf_)
+        __rdstate_ = state;
+    else
+        __rdstate_ = state | badbit;
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    if (((state | (__rdbuf_ ? goodbit : badbit)) & __exceptions_) != 0)
+        throw failure("ios_base::clear");
+#endif  // _LIBCPP_NO_EXCEPTIONS
+}
+
+// init
+
+void
+ios_base::init(void* sb)
+{
+    __rdbuf_ = sb;
+    __rdstate_ = __rdbuf_ ? goodbit : badbit;
+    __exceptions_ = goodbit;
+    __fmtflags_ = skipws | dec;
+    __width_ = 0;
+    __precision_ = 6;
+    __fn_ = 0;
+    __index_ = 0;
+    __event_size_ = 0;
+    __event_cap_ = 0;
+    __iarray_ = 0;
+    __iarray_size_ = 0;
+    __iarray_cap_ = 0;
+    __parray_ = 0;
+    __parray_size_ = 0;
+    __parray_cap_ = 0;
+    ::new(&__loc_) locale;
+}
+
+void
+ios_base::copyfmt(const ios_base& rhs)
+{
+    // If we can't acquire the needed resources, throw bad_alloc (can't set badbit)
+    // Don't alter *this until all needed resources are acquired
+    unique_ptr<event_callback, void (*)(void*)> new_callbacks(0, free);
+    unique_ptr<int, void (*)(void*)> new_ints(0, free);
+    unique_ptr<long, void (*)(void*)> new_longs(0, free);
+    unique_ptr<void*, void (*)(void*)> new_pointers(0, free);
+    if (__event_cap_ < rhs.__event_size_)
+    {
+        size_t newesize = sizeof(event_callback) * rhs.__event_size_;
+        new_callbacks.reset(static_cast<event_callback*>(malloc(newesize)));
+#ifndef _LIBCPP_NO_EXCEPTIONS
+        if (!new_callbacks)
+            throw bad_alloc();
+#endif  // _LIBCPP_NO_EXCEPTIONS
+
+        size_t newisize = sizeof(int) * rhs.__event_size_;
+        new_ints.reset(static_cast<int *>(malloc(newisize)));
+#ifndef _LIBCPP_NO_EXCEPTIONS
+        if (!new_ints)
+            throw bad_alloc();
+#endif  // _LIBCPP_NO_EXCEPTIONS
+    }
+    if (__iarray_cap_ < rhs.__iarray_size_)
+    {
+        size_t newsize = sizeof(long) * rhs.__iarray_size_;
+        new_longs.reset(static_cast<long*>(malloc(newsize)));
+#ifndef _LIBCPP_NO_EXCEPTIONS
+        if (!new_longs)
+            throw bad_alloc();
+#endif  // _LIBCPP_NO_EXCEPTIONS
+    }
+    if (__parray_cap_ < rhs.__parray_size_)
+    {
+        size_t newsize = sizeof(void*) * rhs.__parray_size_;
+        new_pointers.reset(static_cast<void**>(malloc(newsize)));
+#ifndef _LIBCPP_NO_EXCEPTIONS
+        if (!new_pointers)
+            throw bad_alloc();
+#endif  // _LIBCPP_NO_EXCEPTIONS
+    }
+    // Got everything we need.  Copy everything but __rdstate_, __rdbuf_ and __exceptions_
+    __fmtflags_ = rhs.__fmtflags_;
+    __precision_ = rhs.__precision_;
+    __width_ = rhs.__width_;
+    locale& lhs_loc = *reinterpret_cast<locale*>(&__loc_);
+    const locale& rhs_loc = *reinterpret_cast<const locale*>(&rhs.__loc_);
+    lhs_loc = rhs_loc;
+    if (__event_cap_ < rhs.__event_size_)
+    {
+        free(__fn_);
+        __fn_ = new_callbacks.release();
+        free(__index_);
+        __index_ = new_ints.release();
+        __event_cap_ = rhs.__event_size_;
+    }
+    for (__event_size_ = 0; __event_size_ < rhs.__event_size_; ++__event_size_)
+    {
+        __fn_[__event_size_] = rhs.__fn_[__event_size_];
+        __index_[__event_size_] = rhs.__index_[__event_size_];
+    }
+    if (__iarray_cap_ < rhs.__iarray_size_)
+    {
+        free(__iarray_);
+        __iarray_ = new_longs.release();
+        __iarray_cap_ = rhs.__iarray_size_;
+    }
+    for (__iarray_size_ = 0; __iarray_size_ < rhs.__iarray_size_; ++__iarray_size_)
+        __iarray_[__iarray_size_] = rhs.__iarray_[__iarray_size_];
+    if (__parray_cap_ < rhs.__parray_size_)
+    {
+        free(__parray_);
+        __parray_ = new_pointers.release();
+        __parray_cap_ = rhs.__parray_size_;
+    }
+    for (__parray_size_ = 0; __parray_size_ < rhs.__parray_size_; ++__parray_size_)
+        __parray_[__parray_size_] = rhs.__parray_[__parray_size_];
+}
+
+void
+ios_base::move(ios_base& rhs)
+{
+    // *this is uninitialized
+    __fmtflags_ = rhs.__fmtflags_;
+    __precision_ = rhs.__precision_;
+    __width_ = rhs.__width_;
+    __rdstate_ = rhs.__rdstate_;
+    __exceptions_ = rhs.__exceptions_;
+    __rdbuf_ = 0;
+    locale& rhs_loc = *reinterpret_cast<locale*>(&rhs.__loc_);
+    ::new(&__loc_) locale(rhs_loc);
+    __fn_ = rhs.__fn_;
+    rhs.__fn_ = 0;
+    __index_ = rhs.__index_;
+    rhs.__index_ = 0;
+    __event_size_ = rhs.__event_size_;
+    rhs.__event_size_ = 0;
+    __event_cap_ = rhs.__event_cap_;
+    rhs.__event_cap_ = 0;
+    __iarray_ = rhs.__iarray_;
+    rhs.__iarray_ = 0;
+    __iarray_size_ = rhs.__iarray_size_;
+    rhs.__iarray_size_ = 0;
+    __iarray_cap_ = rhs.__iarray_cap_;
+    rhs.__iarray_cap_ = 0;
+    __parray_ = rhs.__parray_;
+    rhs.__parray_ = 0;
+    __parray_size_ = rhs.__parray_size_;
+    rhs.__parray_size_ = 0;
+    __parray_cap_ = rhs.__parray_cap_;
+    rhs.__parray_cap_ = 0;
+}
+
+void
+ios_base::swap(ios_base& rhs) _NOEXCEPT
+{
+    _VSTD::swap(__fmtflags_, rhs.__fmtflags_);
+    _VSTD::swap(__precision_, rhs.__precision_);
+    _VSTD::swap(__width_, rhs.__width_);
+    _VSTD::swap(__rdstate_, rhs.__rdstate_);
+    _VSTD::swap(__exceptions_, rhs.__exceptions_);
+    locale& lhs_loc = *reinterpret_cast<locale*>(&__loc_);
+    locale& rhs_loc = *reinterpret_cast<locale*>(&rhs.__loc_);
+    _VSTD::swap(lhs_loc, rhs_loc);
+    _VSTD::swap(__fn_, rhs.__fn_);
+    _VSTD::swap(__index_, rhs.__index_);
+    _VSTD::swap(__event_size_, rhs.__event_size_);
+    _VSTD::swap(__event_cap_, rhs.__event_cap_);
+    _VSTD::swap(__iarray_, rhs.__iarray_);
+    _VSTD::swap(__iarray_size_, rhs.__iarray_size_);
+    _VSTD::swap(__iarray_cap_, rhs.__iarray_cap_);
+    _VSTD::swap(__parray_, rhs.__parray_);
+    _VSTD::swap(__parray_size_, rhs.__parray_size_);
+    _VSTD::swap(__parray_cap_, rhs.__parray_cap_);
+}
+
+void
+ios_base::__set_badbit_and_consider_rethrow()
+{
+    __rdstate_ |= badbit;
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    if (__exceptions_ & badbit)
+        throw;
+#endif  // _LIBCPP_NO_EXCEPTIONS
+}
+
+void
+ios_base::__set_failbit_and_consider_rethrow()
+{
+    __rdstate_ |= failbit;
+#ifndef _LIBCPP_NO_EXCEPTIONS
+    if (__exceptions_ & failbit)
+        throw;
+#endif  // _LIBCPP_NO_EXCEPTIONS
+}
+
+bool
+ios_base::sync_with_stdio(bool sync)
+{
+    static bool previous_state = true;
+    bool r = previous_state;
+    previous_state = sync;
+    return r;
+}
+
+_LIBCPP_END_NAMESPACE_STD

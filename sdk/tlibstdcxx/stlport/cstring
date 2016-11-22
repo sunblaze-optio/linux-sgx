@@ -1,47 +1,95 @@
+// -*- C++ -*-
+//===--------------------------- cstring ----------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is distributed under the University of Illinois Open Source
+// License. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP_CSTRING
+#define _LIBCPP_CSTRING
+
 /*
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+    cstring synopsis
 
-#ifndef _STLP_CSTRING
+Macros:
 
-#ifndef _STLP_OUTERMOST_HEADER_ID
-#  define _STLP_OUTERMOST_HEADER_ID 0x117
-#  define _STLP_CSTRING
-#  include <stl/_prolog.h>
+    NULL
+
+namespace std
+{
+
+Types:
+
+    size_t
+
+void* memcpy(void* restrict s1, const void* restrict s2, size_t n);
+void* memmove(void* s1, const void* s2, size_t n);
+char* strcpy (char* restrict s1, const char* restrict s2);
+char* strncpy(char* restrict s1, const char* restrict s2, size_t n);
+char* strcat (char* restrict s1, const char* restrict s2);
+char* strncat(char* restrict s1, const char* restrict s2, size_t n);
+int memcmp(const void* s1, const void* s2, size_t n);
+int strcmp (const char* s1, const char* s2);
+int strncmp(const char* s1, const char* s2, size_t n);
+int strcoll(const char* s1, const char* s2);
+size_t strxfrm(char* restrict s1, const char* restrict s2, size_t n);
+const void* memchr(const void* s, int c, size_t n);
+      void* memchr(      void* s, int c, size_t n);
+const char* strchr(const char* s, int c);
+      char* strchr(      char* s, int c);
+size_t strcspn(const char* s1, const char* s2);
+const char* strpbrk(const char* s1, const char* s2);
+      char* strpbrk(      char* s1, const char* s2);
+const char* strrchr(const char* s, int c);
+      char* strrchr(      char* s, int c);
+size_t strspn(const char* s1, const char* s2);
+const char* strstr(const char* s1, const char* s2);
+      char* strstr(      char* s1, const char* s2);
+char* strtok(char* restrict s1, const char* restrict s2);
+void* memset(void* s, int c, size_t n);
+char* strerror(int errnum);
+size_t strlen(const char* s);
+
+}  // std
+
+*/
+
+#include <__config>
+#include <string.h>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
 #endif
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x117)
-#  ifndef _STLP_INTERNAL_CSTRING
-#    include <stl/_cstring.h>
-#  endif
+_LIBCPP_BEGIN_NAMESPACE_STD
+
+using ::size_t;
+using ::memcpy;
+using ::memmove;
+using ::strncpy;
+using ::strncat;
+using ::memcmp;
+using ::strcmp;
+using ::strncmp;
+using ::strcoll;
+using ::strxfrm;
+using ::memchr;
+using ::strchr;
+using ::strcspn;
+using ::strpbrk;
+using ::strrchr;
+using ::strspn;
+using ::strstr;
+#ifndef _LIBCPP_HAS_NO_THREAD_UNSAFE_C_FUNCTIONS
+using ::strtok;
 #endif
+using ::memset;
+using ::strerror;
+using ::strlen;
 
-#if (_STLP_OUTERMOST_HEADER_ID != 0x117) || defined (_STLP_IMPORT_VENDOR_STD)
-#  if defined (_STLP_HAS_INCLUDE_NEXT)
-#    include_next <cstring>
-#  else
-#    include _STLP_NATIVE_CPP_C_HEADER(cstring)
-#  endif
-#endif
+_LIBCPP_END_NAMESPACE_STD
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x117)
-#  include <stl/_epilog.h>
-#  undef _STLP_OUTERMOST_HEADER_ID
-#endif
-
-#endif /* _STLP_CSTRING */
-
-// Local Variables:
-// mode:C++
-// End:
+#endif  // _LIBCPP_CSTRING

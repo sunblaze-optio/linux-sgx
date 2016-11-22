@@ -1,52 +1,83 @@
+// -*- C++ -*-
+//===--------------------------- float.h ----------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP_FLOAT_H
+#define _LIBCPP_FLOAT_H
+
 /*
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+    float.h synopsis
 
-#if !defined (_STLP_OUTERMOST_HEADER_ID)
-#  define _STLP_OUTERMOST_HEADER_ID 0x203
-#  include <stl/_cprolog.h>
-#elif (_STLP_OUTERMOST_HEADER_ID == 0x203) && !defined (_STLP_DONT_POP_HEADER_ID)
-#  define _STLP_DONT_POP_HEADER_ID
-#elif (_STLP_OUTERMOST_HEADER_ID == 0x203)
-#  error This header is only reentrant once, it should be modified if it has to be included more.
+Macros:
+
+    FLT_ROUNDS
+    FLT_EVAL_METHOD     // C99
+    FLT_RADIX
+
+    FLT_MANT_DIG
+    DBL_MANT_DIG
+    LDBL_MANT_DIG
+
+    DECIMAL_DIG         // C99
+
+    FLT_DIG
+    DBL_DIG
+    LDBL_DIG
+
+    FLT_MIN_EXP
+    DBL_MIN_EXP
+    LDBL_MIN_EXP
+
+    FLT_MIN_10_EXP
+    DBL_MIN_10_EXP
+    LDBL_MIN_10_EXP
+
+    FLT_MAX_EXP
+    DBL_MAX_EXP
+    LDBL_MAX_EXP
+
+    FLT_MAX_10_EXP
+    DBL_MAX_10_EXP
+    LDBL_MAX_10_EXP
+
+    FLT_MAX
+    DBL_MAX
+    LDBL_MAX
+
+    FLT_EPSILON
+    DBL_EPSILON
+    LDBL_EPSILON
+
+    FLT_MIN
+    DBL_MIN
+    LDBL_MIN
+
+*/
+
+#include <__config>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
 #endif
 
-#if defined (_STLP_WCE_EVC3)
-struct _exception;
+#include_next <float.h>
+
+#ifdef __cplusplus
+
+#ifndef FLT_EVAL_METHOD
+#define FLT_EVAL_METHOD __FLT_EVAL_METHOD__
 #endif
 
-#if defined (_STLP_HAS_INCLUDE_NEXT)
-#  include_next <float.h>
-#else
-#  include _STLP_NATIVE_C_HEADER(float.h)
+#ifndef DECIMAL_DIG
+#define DECIMAL_DIG __DECIMAL_DIG__
 #endif
 
-#if !defined (__linux__)
-#  if defined(__BORLANDC__) && defined (__cplusplus) && (__BORLANDC__ >= 0x560)
-_STLP_BEGIN_NAMESPACE
-using ::_max_dble;
-using ::_max_flt;
-using ::_max_ldble;
-using ::_tiny_ldble;
-_STLP_END_NAMESPACE
-#  endif
-#endif
+#endif // __cplusplus
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x203)
-#  if ! defined (_STLP_DONT_POP_HEADER_ID)
-#    include <stl/_epilog.h>
-#    undef  _STLP_OUTERMOST_HEADER_ID
-#  endif
-#  undef  _STLP_DONT_POP_HEADER_ID
-#endif
+#endif  // _LIBCPP_FLOAT_H

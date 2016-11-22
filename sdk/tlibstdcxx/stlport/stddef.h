@@ -1,44 +1,62 @@
+// -*- C++ -*-
+//===--------------------------- stddef.h ---------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#if defined(__need_ptrdiff_t) || defined(__need_size_t) || \
+    defined(__need_wchar_t) || defined(__need_NULL) || defined(__need_wint_t)
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+#include_next <stddef.h>
+
+#elif !defined(_LIBCPP_STDDEF_H)
+#define _LIBCPP_STDDEF_H
+
 /*
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+    stddef.h synopsis
 
-#ifndef _STLP_OUTERMOST_HEADER_ID
-#  define _STLP_OUTERMOST_HEADER_ID 0x262
-#  include <stl/_cprolog.h>
-#elif (_STLP_OUTERMOST_HEADER_ID == 0x262) && ! defined (_STLP_DONT_POP_HEADER_ID)
-#  define _STLP_DONT_POP_HEADER_ID
+Macros:
+
+    offsetof(type,member-designator)
+    NULL
+
+Types:
+
+    ptrdiff_t
+    size_t
+    max_align_t
+    nullptr_t
+
+*/
+
+#include <__config>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
 #endif
 
-#if defined (_MSC_VER) || defined (__DMC__)
-/* Native stddef.h contains errno macro definition making inclusion of native
- * errno.h in STLport errno.h impossible. We are then forced to include errno.h
- * first.
- */
-#  include "errno.h"
+#include_next <stddef.h>
+
+#ifdef __cplusplus
+
+extern "C++" {
+#include <__nullptr>
+using std::nullptr_t;
+}
+
+// Re-use the compiler's <stddef.h> max_align_t where possible.
+#if !defined(__CLANG_MAX_ALIGN_T_DEFINED) && !defined(_GCC_MAX_ALIGN_T)
+typedef long double max_align_t;
 #endif
 
-#if defined (_STLP_HAS_INCLUDE_NEXT)
-#  include_next <stddef.h>
-#else
-#  include _STLP_NATIVE_C_HEADER(stddef.h)
 #endif
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x262)
-#  if ! defined (_STLP_DONT_POP_HEADER_ID)
-#    include <stl/_epilog.h>
-#    undef  _STLP_OUTERMOST_HEADER_ID
-#  else
-#    undef  _STLP_DONT_POP_HEADER_ID
-#  endif
-#endif
+#endif  // _LIBCPP_STDDEF_H

@@ -1,391 +1,335 @@
-/*
- * Copyright (c) 1999
- * Silicon Graphics Computer Systems, Inc.
- *
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+//===------------------------ strstream.cpp -------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
 
-// Implementation of the classes in header <strstream>.
-// WARNING: The classes defined in <strstream> are DEPRECATED.  This
-// header is defined in section D.7.1 of the C++ standard, and it
-// MAY BE REMOVED in a future standard revision.  You should use the
-// header <sstream> instead.
+#include "strstream"
+#include "algorithm"
+#include "climits"
+#include "cstring"
+#include "cstdlib"
+#include "__debug"
 
-#include "stlport_prefix.h"
+_LIBCPP_BEGIN_NAMESPACE_STD
 
-#include <strstream>
-#include <algorithm>
-#include <limits>
-
-_STLP_BEGIN_NAMESPACE
-
-// strstreambuf constructor, destructor.
-strstreambuf::strstreambuf(streamsize initial_capacity)
-   : _M_alloc_fun(0), _M_free_fun(0),
-     _M_dynamic(true), _M_frozen(false), _M_constant(false) {
-  size_t n = (sizeof(streamsize) > sizeof(size_t)) ? __STATIC_CAST(size_t, (min)(__STATIC_CAST(streamsize, (numeric_limits<size_t>::max)()),
-                                                                                 (max)(initial_capacity, streamsize(16))))
-                                                   : __STATIC_CAST(size_t, (max)(initial_capacity, streamsize(16)));
-
-  char* buf = _M_alloc(n);
-  if (buf) {
-    setp(buf, buf + n);
-    setg(buf, buf, buf);
-  }
+strstreambuf::strstreambuf(streamsize __alsize)
+    : __strmode_(__dynamic),
+      __alsize_(__alsize),
+      __palloc_(nullptr),
+      __pfree_(nullptr)
+{
 }
 
-strstreambuf::strstreambuf(__alloc_fn alloc_f, __free_fn free_f)
-  : _M_alloc_fun(alloc_f), _M_free_fun(free_f),
-    _M_dynamic(true), _M_frozen(false), _M_constant(false) {
-  size_t n = 16;
-
-  char* buf = _M_alloc(n);
-  if (buf) {
-    setp(buf, buf + n);
-    setg(buf, buf, buf);
-  }
+strstreambuf::strstreambuf(void* (*__palloc)(size_t), void (*__pfree)(void*))
+    : __strmode_(__dynamic),
+      __alsize_(__default_alsize),
+      __palloc_(__palloc),
+      __pfree_(__pfree)
+{
 }
 
-strstreambuf::strstreambuf(char* get, streamsize n, char* put)
-  : _M_alloc_fun(0), _M_free_fun(0),
-    _M_dynamic(false), _M_frozen(false), _M_constant(false) {
-  _M_setup(get, put, n);
-}
-
-strstreambuf::strstreambuf(signed char* get, streamsize n, signed char* put)
-  : _M_alloc_fun(0), _M_free_fun(0),
-    _M_dynamic(false), _M_frozen(false), _M_constant(false) {
-  _M_setup(__REINTERPRET_CAST(char*,get), __REINTERPRET_CAST(char*,put), n);
-}
-
-strstreambuf::strstreambuf(unsigned char* get, streamsize n,
-                           unsigned char* put)
-  : _M_alloc_fun(0), _M_free_fun(0),
-    _M_dynamic(false), _M_frozen(false), _M_constant(false) {
-  _M_setup(__REINTERPRET_CAST(char*,get), __REINTERPRET_CAST(char*,put), n);
-}
-
-strstreambuf::strstreambuf(const char* get, streamsize n)
-  : _M_alloc_fun(0), _M_free_fun(0),
-    _M_dynamic(false), _M_frozen(false), _M_constant(true) {
-  _M_setup(__CONST_CAST(char*,get), 0, n);
-}
-
-strstreambuf::strstreambuf(const signed char* get, streamsize n)
-  : _M_alloc_fun(0), _M_free_fun(0),
-    _M_dynamic(false), _M_frozen(false), _M_constant(true) {
-  _M_setup(__REINTERPRET_CAST(char*, __CONST_CAST(signed char*,get)), 0, n);
-}
-
-strstreambuf::strstreambuf(const unsigned char* get, streamsize n)
-  : _M_alloc_fun(0), _M_free_fun(0),
-    _M_dynamic(false), _M_frozen(false), _M_constant(true) {
-  _M_setup(__REINTERPRET_CAST(char*, __CONST_CAST(unsigned char*,get)), 0, n);
-}
-
-strstreambuf::~strstreambuf() {
-  if (_M_dynamic && !_M_frozen)
-    _M_free(eback());
-}
-
-void strstreambuf::freeze(bool frozenflag) {
-  if (_M_dynamic)
-    _M_frozen = frozenflag;
-}
-
-char* strstreambuf::str() {
-  freeze(true);
-  return eback();
-}
-
-int strstreambuf::pcount() const {
-  return int(pptr() ? pptr() - pbase() : 0);
-}
-
-strstreambuf::int_type strstreambuf::overflow(int_type c) {
-  if (c == traits_type::eof())
-    return traits_type::not_eof(c);
-
-  // Try to expand the buffer.
-  if (pptr() == epptr() && _M_dynamic && !_M_frozen && !_M_constant) {
-    ptrdiff_t old_size = epptr() - pbase();
-    ptrdiff_t new_size = (max)(2 * old_size, ptrdiff_t(1));
-
-    char* buf = _M_alloc(new_size);
-    if (buf) {
-      memcpy(buf, pbase(), old_size);
-
-      char* old_buffer = pbase();
-      bool reposition_get = false;
-      ptrdiff_t old_get_offset;
-      if (gptr() != 0) {
-        reposition_get = true;
-        old_get_offset = gptr() - eback();
-      }
-
-      setp(buf, buf + new_size);
-      pbump((int)old_size);
-
-      if (reposition_get)
-        setg(buf, buf + old_get_offset, buf + (max)(old_get_offset, old_size));
-
-      _M_free(old_buffer);
+void
+strstreambuf::__init(char* __gnext, streamsize __n, char* __pbeg)
+{
+    if (__n == 0)
+        __n = static_cast<streamsize>(strlen(__gnext));
+    else if (__n < 0)
+        __n = INT_MAX;
+    if (__pbeg == nullptr)
+        setg(__gnext, __gnext, __gnext + __n);
+    else
+    {
+        setg(__gnext, __gnext, __pbeg);
+        setp(__pbeg, __pbeg + __n);
     }
-  }
+}
 
-  if (pptr() != epptr()) {
-    *pptr() = traits_type::to_char_type(c);
+strstreambuf::strstreambuf(char* __gnext, streamsize __n, char* __pbeg)
+    : __strmode_(),
+      __alsize_(__default_alsize),
+      __palloc_(nullptr),
+      __pfree_(nullptr)
+{
+    __init(__gnext, __n, __pbeg);
+}
+
+strstreambuf::strstreambuf(const char* __gnext, streamsize __n)
+    : __strmode_(__constant),
+      __alsize_(__default_alsize),
+      __palloc_(nullptr),
+      __pfree_(nullptr)
+{
+    __init(const_cast<char *>(__gnext), __n, nullptr);
+}
+
+strstreambuf::strstreambuf(signed char* __gnext, streamsize __n, signed char* __pbeg)
+    : __strmode_(),
+      __alsize_(__default_alsize),
+      __palloc_(nullptr),
+      __pfree_(nullptr)
+{
+    __init(const_cast<char *>(reinterpret_cast<const char*>(__gnext)), __n, reinterpret_cast<char*>(__pbeg));
+}
+
+strstreambuf::strstreambuf(const signed char* __gnext, streamsize __n)
+    : __strmode_(__constant),
+      __alsize_(__default_alsize),
+      __palloc_(nullptr),
+      __pfree_(nullptr)
+{
+    __init(const_cast<char *>(reinterpret_cast<const char*>(__gnext)), __n, nullptr);
+}
+
+strstreambuf::strstreambuf(unsigned char* __gnext, streamsize __n, unsigned char* __pbeg)
+    : __strmode_(),
+      __alsize_(__default_alsize),
+      __palloc_(nullptr),
+      __pfree_(nullptr)
+{
+    __init(const_cast<char *>(reinterpret_cast<const char*>(__gnext)), __n, reinterpret_cast<char*>(__pbeg));
+}
+
+strstreambuf::strstreambuf(const unsigned char* __gnext, streamsize __n)
+    : __strmode_(__constant),
+      __alsize_(__default_alsize),
+      __palloc_(nullptr),
+      __pfree_(nullptr)
+{
+    __init(const_cast<char *>(reinterpret_cast<const char*>(__gnext)), __n, nullptr);
+}
+
+strstreambuf::~strstreambuf()
+{
+    if (eback() && (__strmode_ & __allocated) != 0 && (__strmode_ & __frozen) == 0)
+    {
+        if (__pfree_)
+            __pfree_(eback());
+        else
+            delete [] eback();
+    }
+}
+
+void
+strstreambuf::swap(strstreambuf& __rhs)
+{
+    streambuf::swap(__rhs);
+    _VSTD::swap(__strmode_, __rhs.__strmode_);
+    _VSTD::swap(__alsize_, __rhs.__alsize_);
+    _VSTD::swap(__palloc_, __rhs.__palloc_);
+    _VSTD::swap(__pfree_, __rhs.__pfree_);
+}
+
+void
+strstreambuf::freeze(bool __freezefl)
+{
+    if (__strmode_ & __dynamic)
+    {
+        if (__freezefl)
+            __strmode_ |= __frozen;
+        else
+            __strmode_ &= ~__frozen;
+    }
+}
+
+char*
+strstreambuf::str()
+{
+    if (__strmode_ & __dynamic)
+        __strmode_ |= __frozen;
+    return eback();
+}
+
+int
+strstreambuf::pcount() const
+{
+    return static_cast<int>(pptr() - pbase());
+}
+
+strstreambuf::int_type
+strstreambuf::overflow(int_type __c)
+{
+    if (__c == EOF)
+        return int_type(0);
+    if (pptr() == epptr())
+    {
+        if ((__strmode_ & __dynamic) == 0 || (__strmode_ & __frozen) != 0)
+            return int_type(EOF);
+        size_t old_size = static_cast<size_t> ((epptr() ? epptr() : egptr()) - eback());
+        size_t new_size = max<size_t>(static_cast<size_t>(__alsize_), 2*old_size);
+        if (new_size == 0)
+            new_size = __default_alsize;
+        char* buf = nullptr;
+        if (__palloc_)
+            buf = static_cast<char*>(__palloc_(new_size));
+        else
+            buf = new char[new_size];
+        if (buf == nullptr)
+            return int_type(EOF);
+        if (old_size != 0) {
+            _LIBCPP_ASSERT(eback(), "overflow copying from NULL");
+            memcpy(buf, eback(), static_cast<size_t>(old_size));
+        }
+        ptrdiff_t ninp = gptr()  - eback();
+        ptrdiff_t einp = egptr() - eback();
+        ptrdiff_t nout = pptr()  - pbase();
+        if (__strmode_ & __allocated)
+        {
+            if (__pfree_)
+                __pfree_(eback());
+            else
+                delete [] eback();
+        }
+        setg(buf, buf + ninp, buf + einp);
+        setp(buf + einp, buf + new_size);
+        pbump(static_cast<int>(nout));
+        __strmode_ |= __allocated;
+    }
+    *pptr() = static_cast<char>(__c);
     pbump(1);
-    return c;
-  }
-  else
-    return traits_type::eof();
+    return int_type(static_cast<unsigned char>(__c));
 }
 
-strstreambuf::int_type strstreambuf::pbackfail(int_type c) {
-  if (gptr() != eback()) {
-    if (c == traits_type::eof()) {
-      gbump(-1);
-      return traits_type::not_eof(c);
+strstreambuf::int_type
+strstreambuf::pbackfail(int_type __c)
+{
+    if (eback() == gptr())
+        return EOF;
+    if (__c == EOF)
+    {
+        gbump(-1);
+        return int_type(0);
     }
-    else if (c == gptr()[-1]) {
-      gbump(-1);
-      return c;
+    if (__strmode_ & __constant)
+    {
+        if (gptr()[-1] == static_cast<char>(__c))
+        {
+            gbump(-1);
+            return __c;
+        }
+        return EOF;
     }
-    else if (!_M_constant) {
-      gbump(-1);
-      *gptr() = traits_type::to_char_type(c);
-      return c;
-    }
-  }
-
-  return traits_type::eof();
+    gbump(-1);
+    *gptr() = static_cast<char>(__c);
+    return __c;
 }
 
-strstreambuf::int_type strstreambuf::underflow() {
-  if (gptr() == egptr() && pptr() && pptr() > egptr())
-    setg(eback(), gptr(), pptr());
-
-  if (gptr() != egptr())
-    return (unsigned char) *gptr();
-  else
-    return _Traits::eof();
-}
-
-basic_streambuf<char, char_traits<char> >*
-strstreambuf::setbuf(char*, streamsize) {
-  return this;
+strstreambuf::int_type
+strstreambuf::underflow()
+{
+    if (gptr() == egptr())
+    {
+        if (egptr() >= pptr())
+            return EOF;
+        setg(eback(), gptr(), pptr());
+    }
+    return int_type(static_cast<unsigned char>(*gptr()));
 }
 
 strstreambuf::pos_type
-strstreambuf::seekoff(off_type off,
-                      ios_base::seekdir dir, ios_base::openmode mode) {
-  bool do_get = false;
-  bool do_put = false;
-
-  if ((mode & (ios_base::in | ios_base::out)) ==
-          (ios_base::in | ios_base::out) &&
-      (dir == ios_base::beg || dir == ios_base::end))
-    do_get = do_put = true;
-  else if (mode & ios_base::in)
-    do_get = true;
-  else if (mode & ios_base::out)
-    do_put = true;
-
-  // !gptr() is here because, according to D.7.1 paragraph 4, the seekable
-  // area is undefined if there is no get area.
-  if ((!do_get && !do_put) || (do_put && !pptr()) || !gptr())
-    return pos_type(off_type(-1));
-
-  char* seeklow  = eback();
-  char* seekhigh = epptr() ? epptr() : egptr();
-
-  off_type newoff;
-  switch(dir) {
-  case ios_base::beg:
-    newoff = 0;
-    break;
-  case ios_base::end:
-    newoff = seekhigh - seeklow;
-    break;
-  case ios_base::cur:
-    newoff = do_put ? pptr() - seeklow : gptr() - seeklow;
-    break;
-  default:
-    return pos_type(off_type(-1));
-  }
-
-  off += newoff;
-  if (off < 0 || off > seekhigh - seeklow)
-    return pos_type(off_type(-1));
-
-  if (do_put) {
-    if (seeklow + __STATIC_CAST(ptrdiff_t, off) < pbase()) {
-      setp(seeklow, epptr());
-      pbump((int)off);
+strstreambuf::seekoff(off_type __off, ios_base::seekdir __way, ios_base::openmode __which)
+{
+    off_type __p(-1);
+    bool pos_in = (__which & ios::in) != 0;
+    bool pos_out = (__which & ios::out) != 0;
+    bool legal = false;
+    switch (__way)
+    {
+    case ios::beg:
+    case ios::end:
+        if (pos_in || pos_out)
+            legal = true;
+        break;
+    case ios::cur:
+        if (pos_in != pos_out)
+            legal = true;
+        break;
     }
-    else {
-      setp(pbase(), epptr());
-      pbump((int)(off - (pbase() - seeklow)));
+    if (pos_in && gptr() == nullptr)
+        legal = false;
+    if (pos_out && pptr() == nullptr)
+        legal = false;
+    if (legal)
+    {
+        off_type newoff;
+        char* seekhigh = epptr() ? epptr() : egptr();
+        switch (__way)
+        {
+        case ios::beg:
+            newoff = 0;
+            break;
+        case ios::cur:
+            newoff = (pos_in ? gptr() : pptr()) - eback();
+            break;
+        case ios::end:
+            newoff = seekhigh - eback();
+            break;
+        default:
+            _LIBCPP_UNREACHABLE();
+        }
+        newoff += __off;
+        if (0 <= newoff && newoff <= seekhigh - eback())
+        {
+            char* newpos = eback() + newoff;
+            if (pos_in)
+                setg(eback(), newpos, _VSTD::max(newpos, egptr()));
+            if (pos_out)
+            {
+                // min(pbase, newpos), newpos, epptr()
+                __off = epptr() - newpos;
+                setp(min(pbase(), newpos), epptr());
+                pbump(static_cast<int>((epptr() - pbase()) - __off));
+            }
+            __p = newoff;
+        }
     }
-  }
-  if (do_get) {
-    if (off <= egptr() - seeklow)
-      setg(seeklow, seeklow + __STATIC_CAST(ptrdiff_t, off), egptr());
-    else if (off <= pptr() - seeklow)
-      setg(seeklow, seeklow + __STATIC_CAST(ptrdiff_t, off), pptr());
-    else
-      setg(seeklow, seeklow + __STATIC_CAST(ptrdiff_t, off), epptr());
-  }
-
-  return pos_type(newoff);
+    return pos_type(__p);
 }
 
 strstreambuf::pos_type
-strstreambuf::seekpos(pos_type pos, ios_base::openmode mode) {
-  return seekoff(pos - pos_type(off_type(0)), ios_base::beg, mode);
-}
-
-
-char* strstreambuf::_M_alloc(size_t n) {
-  if (_M_alloc_fun)
-    return __STATIC_CAST(char*,_M_alloc_fun(n));
-  else
-    return new char[n];
-}
-
-void strstreambuf::_M_free(char* p) {
-  if (p) {
-    if (_M_free_fun)
-      _M_free_fun(p);
-    else
-      delete[] p;
-  }
-}
-
-void strstreambuf::_M_setup(char* get, char* put, streamsize n) {
-  if (get) {
-    size_t N = n > 0 ? size_t(n) : n == 0 ? strlen(get) : size_t(INT_MAX);
-
-    if (put) {
-      setg(get, get, get + N);
-      setp(put, put + N);
+strstreambuf::seekpos(pos_type __sp, ios_base::openmode __which)
+{
+    off_type __p(-1);
+    bool pos_in = (__which & ios::in) != 0;
+    bool pos_out = (__which & ios::out) != 0;
+    if (pos_in || pos_out)
+    {
+        if (!((pos_in && gptr() == nullptr) || (pos_out && pptr() == nullptr)))
+        {
+            off_type newoff = __sp;
+            char* seekhigh = epptr() ? epptr() : egptr();
+            if (0 <= newoff && newoff <= seekhigh - eback())
+            {
+                char* newpos = eback() + newoff;
+                if (pos_in)
+                    setg(eback(), newpos, _VSTD::max(newpos, egptr()));
+                if (pos_out)
+                {
+                    // min(pbase, newpos), newpos, epptr()
+                    off_type temp = epptr() - newpos;
+                    setp(min(pbase(), newpos), epptr());
+                    pbump(static_cast<int>((epptr() - pbase()) - temp));
+                }
+                __p = newoff;
+            }
+        }
     }
-    else {
-      setg(get, get, get + N);
-    }
-  }
+    return pos_type(__p);
 }
 
-//----------------------------------------------------------------------
-// Class istrstream
-
-istrstream::istrstream(char* s)
-  : basic_istream<char, char_traits<char> >(0), _M_buf(s, 0) {
-  this->init(&_M_buf);
+istrstream::~istrstream()
+{
 }
 
-istrstream::istrstream(const char* s)
-  : basic_istream<char, char_traits<char> >(0), _M_buf(s, 0) {
-  this->init(&_M_buf);
+ostrstream::~ostrstream()
+{
 }
 
-istrstream::istrstream(char* s, streamsize n)
-  : basic_istream<char, char_traits<char> >(0), _M_buf(s, n) {
-  this->init(&_M_buf);
+strstream::~strstream()
+{
 }
 
-istrstream::istrstream(const char* s, streamsize n)
-  : basic_istream<char, char_traits<char> >(0), _M_buf(s, n) {
-  this->init(&_M_buf);
-}
-
-istrstream::~istrstream() {}
-
-strstreambuf* istrstream::rdbuf() const {
-  return __CONST_CAST(strstreambuf*,&_M_buf);
-}
-
-char* istrstream::str() { return _M_buf.str(); }
-
-//----------------------------------------------------------------------
-// Class ostrstream
-
-ostrstream::ostrstream()
-  : basic_ostream<char, char_traits<char> >(0), _M_buf() {
-  basic_ios<char, char_traits<char> >::init(&_M_buf);
-}
-
-ostrstream::ostrstream(char* s, int n, ios_base::openmode mode)
-  : basic_ostream<char, char_traits<char> >(0),
-    _M_buf(s, n, mode & ios_base::app ? s + strlen(s) : s) {
-  basic_ios<char, char_traits<char> >::init(&_M_buf);
-}
-
-ostrstream::~ostrstream() {}
-
-strstreambuf* ostrstream::rdbuf() const {
-  return __CONST_CAST(strstreambuf*,&_M_buf);
-}
-
-void ostrstream::freeze(bool freezeflag) {
-  _M_buf.freeze(freezeflag);
-}
-
-char* ostrstream::str() {
-  return _M_buf.str();
-}
-
-int ostrstream::pcount() const {
-  return _M_buf.pcount();
-}
-
-
-//----------------------------------------------------------------------
-// Class strstream
-
-strstream::strstream()
-  : basic_iostream<char, char_traits<char> >(0), _M_buf() {
-  basic_ios<char, char_traits<char> >::init(&_M_buf);
-}
-
-strstream::strstream(char* s, int n, ios_base::openmode mode)
-  : basic_iostream<char, char_traits<char> >(0),
-    _M_buf(s, n, mode & ios_base::app ? s + strlen(s) : s) {
-  basic_ios<char, char_traits<char> >::init(&_M_buf);
-}
-
-strstream::~strstream() {}
-
-strstreambuf* strstream::rdbuf() const {
-  return __CONST_CAST(strstreambuf*,&_M_buf);
-}
-
-void strstream::freeze(bool freezeflag) {
-  _M_buf.freeze(freezeflag);
-}
-
-int strstream::pcount() const {
-  return _M_buf.pcount();
-}
-
-char* strstream::str() {
-  return _M_buf.str();
-}
-
-_STLP_END_NAMESPACE
-
-// Local Variables:
-// mode:C++
-// End:
+_LIBCPP_END_NAMESPACE_STD

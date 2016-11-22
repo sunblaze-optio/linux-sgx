@@ -1,47 +1,48 @@
+// -*- C++ -*-
+//===--------------------------- cstdarg ----------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP_CSTDARG
+#define _LIBCPP_CSTDARG
+
 /*
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+    cstdarg synopsis
 
-#ifndef _STLP_CSTDARG
+Macros:
 
-#ifndef _STLP_OUTERMOST_HEADER_ID
-#  define _STLP_OUTERMOST_HEADER_ID 0x113
-#  define _STLP_CSTDARG
-#  include <stl/_prolog.h>
+    type va_arg(va_list ap, type);
+    void va_copy(va_list dest, va_list src);  // C99
+    void va_end(va_list ap);
+    void va_start(va_list ap, parmN);
+
+namespace std
+{
+
+Types:
+
+    va_list
+
+}  // std
+
+*/
+
+#include <__config>
+#include <stdarg.h>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
 #endif
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x113)
-#  ifndef _STLP_INTERNAL_CSTDARG
-#    include <stl/_cstdarg.h>
-#  endif
-#endif
+_LIBCPP_BEGIN_NAMESPACE_STD
 
-#if (_STLP_OUTERMOST_HEADER_ID != 0x113) || defined (_STLP_IMPORT_VENDOR_STD)
-#  if defined (_STLP_HAS_INCLUDE_NEXT)
-#    include_next <cstdarg>
-#  else
-#    include _STLP_NATIVE_CPP_C_HEADER(cstdarg)
-#  endif
-#endif
+using ::va_list;
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x113 )
-#  include <stl/_epilog.h>
-#  undef _STLP_OUTERMOST_HEADER_ID
-#endif
+_LIBCPP_END_NAMESPACE_STD
 
-#endif /* _STLP_CSTDARG */
-
-// Local Variables:
-// mode:C++
-// End:
+#endif  // _LIBCPP_CSTDARG

@@ -32,9 +32,9 @@
 
 include ../../buildenv.mk
 
-CPPFLAGS += -I$(COMMON_DIR)/inc       \
-            -I$(COMMON_DIR)/inc/tlibc \
-            -I./stlport
+CPPFLAGS += -I./stlport               \
+			-I$(COMMON_DIR)/inc       \
+			-I$(COMMON_DIR)/inc/tlibc \
 
 CXXFLAGS += $(ENCLAVE_CXXFLAGS)
 

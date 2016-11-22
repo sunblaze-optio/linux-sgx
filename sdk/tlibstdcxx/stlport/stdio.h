@@ -1,57 +1,127 @@
+// -*- C++ -*-
+//===---------------------------- stdio.h ---------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#if defined(__need_FILE) || defined(__need___FILE)
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+#include_next <stdio.h>
+
+#elif !defined(_LIBCPP_STDIO_H)
+#define _LIBCPP_STDIO_H
+
 /*
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+    stdio.h synopsis
 
-/* Workaround for a "misbehaviour" when compiling resource scripts using
- * eMbedded Visual C++. The standard .rc file includes windows header files,
- * which in turn include stdarg.h, which results in warnings and errors
- */
-#if !defined(RC_INVOKED)
+Macros:
 
-#  ifndef _STLP_OUTERMOST_HEADER_ID
-#    define _STLP_OUTERMOST_HEADER_ID 0x264
-#    include <stl/_cprolog.h>
-#  elif (_STLP_OUTERMOST_HEADER_ID == 0x264) && !defined (_STLP_DONT_POP_HEADER_ID)
-#    define _STLP_DONT_POP_HEADER_ID
-#  endif
+    BUFSIZ
+    EOF
+    FILENAME_MAX
+    FOPEN_MAX
+    L_tmpnam
+    NULL
+    SEEK_CUR
+    SEEK_END
+    SEEK_SET
+    TMP_MAX
+    _IOFBF
+    _IOLBF
+    _IONBF
+    stderr
+    stdin
+    stdout
 
-#    if defined(_STLP_WCE_EVC3)
-struct _exception;
-#    endif
-#    if defined (_STLP_HAS_INCLUDE_NEXT)
-#      include_next <stdio.h>
-#    else
-#      include _STLP_NATIVE_C_HEADER(stdio.h)
-#    endif
+Types:
 
-#    if defined (__SUNPRO_CC) && !defined (_STRUCT_FILE)
-#      define _STRUCT_FILE
-#    endif
+FILE
+fpos_t
+size_t
 
-#    if defined (__BORLANDC__) && defined (__cplusplus) && !defined (__linux__)
-_STLP_BEGIN_NAMESPACE
-using __std_alias::_streams;
-_STLP_END_NAMESPACE
-#    endif
+int remove(const char* filename);
+int rename(const char* old, const char* new);
+FILE* tmpfile(void);
+char* tmpnam(char* s);
+int fclose(FILE* stream);
+int fflush(FILE* stream);
+FILE* fopen(const char* restrict filename, const char* restrict mode);
+FILE* freopen(const char* restrict filename, const char * restrict mode,
+              FILE * restrict stream);
+void setbuf(FILE* restrict stream, char* restrict buf);
+int setvbuf(FILE* restrict stream, char* restrict buf, int mode, size_t size);
+int fprintf(FILE* restrict stream, const char* restrict format, ...);
+int fscanf(FILE* restrict stream, const char * restrict format, ...);
+int printf(const char* restrict format, ...);
+int scanf(const char* restrict format, ...);
+int snprintf(char* restrict s, size_t n, const char* restrict format, ...);    // C99
+int sprintf(char* restrict s, const char* restrict format, ...);
+int sscanf(const char* restrict s, const char* restrict format, ...);
+int vfprintf(FILE* restrict stream, const char* restrict format, va_list arg);
+int vfscanf(FILE* restrict stream, const char* restrict format, va_list arg);  // C99
+int vprintf(const char* restrict format, va_list arg);
+int vscanf(const char* restrict format, va_list arg);                          // C99
+int vsnprintf(char* restrict s, size_t n, const char* restrict format,         // C99
+              va_list arg);
+int vsprintf(char* restrict s, const char* restrict format, va_list arg);
+int vsscanf(const char* restrict s, const char* restrict format, va_list arg); // C99
+int fgetc(FILE* stream);
+char* fgets(char* restrict s, int n, FILE* restrict stream);
+int fputc(int c, FILE* stream);
+int fputs(const char* restrict s, FILE* restrict stream);
+int getc(FILE* stream);
+int getchar(void);
+char* gets(char* s);  // removed in C++14
+int putc(int c, FILE* stream);
+int putchar(int c);
+int puts(const char* s);
+int ungetc(int c, FILE* stream);
+size_t fread(void* restrict ptr, size_t size, size_t nmemb,
+             FILE* restrict stream);
+size_t fwrite(const void* restrict ptr, size_t size, size_t nmemb,
+              FILE* restrict stream);
+int fgetpos(FILE* restrict stream, fpos_t* restrict pos);
+int fseek(FILE* stream, long offset, int whence);
+int fsetpos(FILE*stream, const fpos_t* pos);
+long ftell(FILE* stream);
+void rewind(FILE* stream);
+void clearerr(FILE* stream);
+int feof(FILE* stream);
+int ferror(FILE* stream);
+void perror(const char* s);
+*/
 
-#  if (_STLP_OUTERMOST_HEADER_ID == 0x264)
-#    if !defined (_STLP_DONT_POP_HEADER_ID)
-#      include <stl/_epilog.h>
-#      undef  _STLP_OUTERMOST_HEADER_ID
-#    else
-#      undef  _STLP_DONT_POP_HEADER_ID
-#    endif
-#  endif
+#include <__config>
 
-#endif /* RC_INVOKED */
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+#include_next <stdio.h>
+
+#ifdef __cplusplus
+
+// snprintf
+#if defined(_LIBCPP_MSVCRT)
+extern "C++" {
+#include "support/win32/support.h"
+}
+#endif
+
+#undef getc
+#undef putc
+#undef clearerr
+#undef feof
+#undef ferror
+
+#endif
+
+#endif  // _LIBCPP_STDIO_H

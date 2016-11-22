@@ -1,47 +1,79 @@
+// -*- C++ -*-
+//===--------------------------- wctype.h ---------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP_WCTYPE_H
+#define _LIBCPP_WCTYPE_H
+
 /*
- * Copyright (c) 1999
- * Boris Fomitchev
- *
- * This material is provided "as is", with absolutely no warranty expressed
- * or implied. Any use is at your own risk.
- *
- * Permission to use or copy this software for any purpose is hereby granted
- * without fee, provided the above notices are retained on all copies.
- * Permission to modify the code and to distribute modified code is granted,
- * provided the above notices are retained, and a notice that the code was
- * modified is included with the above copyright notice.
- *
- */
+    wctype.h synopsis
 
-#if !defined (_STLP_OUTERMOST_HEADER_ID)
-#  define _STLP_OUTERMOST_HEADER_ID 0x279
-#  include <stl/_cprolog.h>
-#elif (_STLP_OUTERMOST_HEADER_ID == 0x279) && !defined (_STLP_DONT_POP_HEADER_ID)
-#  define _STLP_DONT_POP_HEADER_ID
+Macros:
+
+    WEOF
+
+Types:
+
+    wint_t
+    wctrans_t
+    wctype_t
+
+int iswalnum(wint_t wc);
+int iswalpha(wint_t wc);
+int iswblank(wint_t wc);  // C99
+int iswcntrl(wint_t wc);
+int iswdigit(wint_t wc);
+int iswgraph(wint_t wc);
+int iswlower(wint_t wc);
+int iswprint(wint_t wc);
+int iswpunct(wint_t wc);
+int iswspace(wint_t wc);
+int iswupper(wint_t wc);
+int iswxdigit(wint_t wc);
+int iswctype(wint_t wc, wctype_t desc);
+wctype_t wctype(const char* property);
+wint_t towlower(wint_t wc);
+wint_t towupper(wint_t wc);
+wint_t towctrans(wint_t wc, wctrans_t desc);
+wctrans_t wctrans(const char* property);
+
+*/
+
+#include <__config>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
 #endif
 
-/* evc3 doesn't have wctype.h */
-#if !defined(_STLP_WCE_EVC3)
-#  if defined (_STLP_HAS_INCLUDE_NEXT)
-#    if defined (__hpux)
-#      include_next <stdarg.h>
-#      include_next <wchar.h>
-#    endif
-#    include_next <wctype.h>
-#  else
-#    if defined (__hpux)
-#      include _STLP_NATIVE_C_HEADER(stdarg.h)
-#      include _STLP_NATIVE_C_HEADER(wchar.h)
-#    endif
-#    include _STLP_NATIVE_C_HEADER(wctype.h)
-#  endif
-#endif
+#include_next <wctype.h>
 
-#if (_STLP_OUTERMOST_HEADER_ID == 0x279)
-#  if ! defined (_STLP_DONT_POP_HEADER_ID)
-#    include <stl/_epilog.h>
-#    undef  _STLP_OUTERMOST_HEADER_ID
-#  else
-#    undef  _STLP_DONT_POP_HEADER_ID
-#  endif
-#endif
+#ifdef __cplusplus
+
+#undef iswalnum
+#undef iswalpha
+#undef iswblank
+#undef iswcntrl
+#undef iswdigit
+#undef iswgraph
+#undef iswlower
+#undef iswprint
+#undef iswpunct
+#undef iswspace
+#undef iswupper
+#undef iswxdigit
+#undef iswctype
+#undef wctype
+#undef towlower
+#undef towupper
+#undef towctrans
+#undef wctrans
+
+#endif  // __cplusplus
+
+#endif  // _LIBCPP_WCTYPE_H
