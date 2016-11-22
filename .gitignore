@@ -1,5 +1,6 @@
 #object file
 *.o
+*.lo
 
 #library
 *.a
@@ -17,3 +18,8 @@
 #output files
 /build/
 /linux/installer/bin/*.bin
+.deps/
+.dirstamp
+sgx_sign
+_build
+sgx_config_cpusvn

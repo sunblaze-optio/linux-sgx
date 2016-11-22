@@ -128,51 +128,6 @@ as_integer( const string& func, const string& s, size_t* idx, int base )
     return as_integer_helper<unsigned long long>( func, s, idx, base, strtoull );
 }
 
-// wstring
-template<>
-inline
-int
-as_integer( const string& func, const wstring& s, size_t* idx, int base )
-{
-    // Use long as no Stantard string to integer exists.
-    long r = as_integer_helper<long>( func, s, idx, base, wcstol );
-    if (r < numeric_limits<int>::min() || numeric_limits<int>::max() < r)
-        throw_from_string_out_of_range(func);
-    return static_cast<int>(r);
-}
-
-template<>
-inline
-long
-as_integer( const string& func, const wstring& s, size_t* idx, int base )
-{
-    return as_integer_helper<long>( func, s, idx, base, wcstol );
-}
-
-template<>
-inline
-unsigned long
-as_integer( const string& func, const wstring& s, size_t* idx, int base )
-{
-    return as_integer_helper<unsigned long>( func, s, idx, base, wcstoul );
-}
-
-template<>
-inline
-long long
-as_integer( const string& func, const wstring& s, size_t* idx, int base )
-{
-    return as_integer_helper<long long>( func, s, idx, base, wcstoll );
-}
-
-template<>
-inline
-unsigned long long
-as_integer( const string& func, const wstring& s, size_t* idx, int base )
-{
-    return as_integer_helper<unsigned long long>( func, s, idx, base, wcstoull );
-}
-
 // as_float
 
 template<typename V, typename S, typename F> 
@@ -221,30 +176,6 @@ long double
 as_float( const string& func, const string& s, size_t* idx )
 {
     return as_float_helper<long double>( func, s, idx, strtold );
-}
-
-template<>
-inline
-float
-as_float( const string& func, const wstring& s, size_t* idx )
-{
-    return as_float_helper<float>( func, s, idx, wcstof );
-}
-
-template<>
-inline
-double
-as_float( const string& func, const wstring& s, size_t* idx )
-{
-    return as_float_helper<double>( func, s, idx, wcstod );
-}
-
-template<>
-inline
-long double
-as_float( const string& func, const wstring& s, size_t* idx )
-{
-    return as_float_helper<long double>( func, s, idx, wcstold );
 }
 
 }  // unnamed namespace

@@ -38,9 +38,8 @@ CPPFLAGS += -I./stlport               \
 
 CXXFLAGS += $(ENCLAVE_CXXFLAGS)
 
-SRCS       := src/string.cpp \
-	          src/complex.cpp \
-			  src/complex_trig.cpp
+SRCS       := src/algorithm.cpp \
+			  src/string.cpp
 
 OBJS       := $(SRCS:.cpp=.o)
 
