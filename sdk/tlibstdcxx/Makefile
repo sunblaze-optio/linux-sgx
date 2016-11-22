@@ -49,7 +49,13 @@ SRCS       := src/algorithm.cpp \
 			  src/mutex.cpp       \
 			  src/new.cpp       \
 			  src/optional.cpp       \
-			  src/string.cpp
+			  src/shared_mutex.cpp       \
+			  src/stdexcept.cpp       \
+			  src/string.cpp      \
+			  src/thread.cpp      \
+			  src/typeinfo.cpp      \
+			  src/utility.cpp      \
+			  src/valarray.cpp
 
 OBJS       := $(SRCS:.cpp=.o)
 
