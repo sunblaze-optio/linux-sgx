@@ -70,21 +70,13 @@ operator new(std::size_t size, std::align_val_t alignment) _THROW_BAD_ALLOC
     if (static_cast<size_t>(alignment) < sizeof(void*))
       alignment = std::align_val_t(sizeof(void*));
     void* p;
-    while (::posix_memalign(&p, static_cast<size_t>(alignment), size) != 0)
+    while ((p = ::memalign(static_cast<size_t>(alignment), size)) == NULL)
     {
-        // If posix_memalign fails and there is a new_handler,
-        // call it to try free up memory.
-        std::new_handler nh = std::get_new_handler();
-        if (nh)
-            nh();
-        else {
 #ifndef _LIBCPP_NO_EXCEPTIONS
-            throw std::bad_alloc();
+        throw std::bad_alloc();
 #else
-            p = nullptr; // posix_memalign doesn't initialize 'p' on failure
-            break;
+        break;
 #endif
-        }
     }
     return p;
 }

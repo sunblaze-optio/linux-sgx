@@ -39,6 +39,16 @@ CPPFLAGS += -I./stlport               \
 CXXFLAGS += $(ENCLAVE_CXXFLAGS)
 
 SRCS       := src/algorithm.cpp \
+			  src/any.cpp       \
+			  src/bind.cpp       \
+			  src/condition_variable.cpp       \
+			  src/exception.cpp       \
+			  src/future.cpp       \
+			  src/hash.cpp       \
+			  src/memory.cpp       \
+			  src/mutex.cpp       \
+			  src/new.cpp       \
+			  src/optional.cpp       \
 			  src/string.cpp
 
 OBJS       := $(SRCS:.cpp=.o)
