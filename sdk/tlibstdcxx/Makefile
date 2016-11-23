@@ -45,6 +45,7 @@ SRCS       := src/algorithm.cpp \
 			  src/exception.cpp       \
 			  src/future.cpp       \
 			  src/hash.cpp       \
+			  src/locale.cpp       \
 			  src/memory.cpp       \
 			  src/mutex.cpp       \
 			  src/new.cpp       \
