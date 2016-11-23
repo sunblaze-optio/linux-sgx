@@ -8,6 +8,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#error "cwchar not supported in SGX"
+
 #ifndef _LIBCPP_CWCHAR
 #define _LIBCPP_CWCHAR
 

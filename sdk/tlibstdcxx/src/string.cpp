@@ -9,7 +9,6 @@
 
 #include "string"
 #include "cstdlib"
-#include "cwchar"
 #include "cerrno"
 #include "limits"
 #include "stdexcept"
@@ -23,7 +22,6 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS __basic_string_common<true>;
 
 template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_string<char>;
-template class _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS basic_string<wchar_t>;
 
 template
     string
@@ -186,20 +184,8 @@ stoi(const string& str, size_t* idx, int base)
     return as_integer<int>( "stoi", str, idx, base );
 }
 
-int
-stoi(const wstring& str, size_t* idx, int base)
-{
-    return as_integer<int>( "stoi", str, idx, base );
-}
-
 long
 stol(const string& str, size_t* idx, int base)
-{
-    return as_integer<long>( "stol", str, idx, base );
-}
-
-long
-stol(const wstring& str, size_t* idx, int base)
 {
     return as_integer<long>( "stol", str, idx, base );
 }
@@ -210,20 +196,8 @@ stoul(const string& str, size_t* idx, int base)
     return as_integer<unsigned long>( "stoul", str, idx, base );
 }
 
-unsigned long
-stoul(const wstring& str, size_t* idx, int base)
-{
-    return as_integer<unsigned long>( "stoul", str, idx, base );
-}
-
 long long
 stoll(const string& str, size_t* idx, int base)
-{
-    return as_integer<long long>( "stoll", str, idx, base );
-}
-
-long long
-stoll(const wstring& str, size_t* idx, int base)
 {
     return as_integer<long long>( "stoll", str, idx, base );
 }
@@ -234,20 +208,8 @@ stoull(const string& str, size_t* idx, int base)
     return as_integer<unsigned long long>( "stoull", str, idx, base );
 }
 
-unsigned long long
-stoull(const wstring& str, size_t* idx, int base)
-{
-    return as_integer<unsigned long long>( "stoull", str, idx, base );
-}
-
 float
 stof(const string& str, size_t* idx)
-{
-    return as_float<float>( "stof", str, idx );
-}
-
-float
-stof(const wstring& str, size_t* idx)
 {
     return as_float<float>( "stof", str, idx );
 }
@@ -258,20 +220,8 @@ stod(const string& str, size_t* idx)
     return as_float<double>( "stod", str, idx );
 }
 
-double
-stod(const wstring& str, size_t* idx)
-{
-    return as_float<double>( "stod", str, idx );
-}
-
 long double
 stold(const string& str, size_t* idx)
-{
-    return as_float<long double>( "stold", str, idx );
-}
-
-long double
-stold(const wstring& str, size_t* idx)
 {
     return as_float<long double>( "stold", str, idx );
 }
@@ -325,46 +275,6 @@ struct initial_string<string, V, b>
     }
 };
 
-template <class V>
-struct initial_string<wstring, V, false>
-{
-    wstring
-    operator()() const
-    {
-        const size_t n = (numeric_limits<unsigned long long>::digits / 3)
-          + ((numeric_limits<unsigned long long>::digits % 3) != 0)
-          + 1;
-        wstring s(n, wchar_t());
-        s.resize(s.capacity());
-        return s;
-    }
-};
-
-template <class V>
-struct initial_string<wstring, V, true>
-{
-    wstring
-    operator()() const
-    {
-        wstring s(20, wchar_t());
-        s.resize(s.capacity());
-        return s;
-    }
-};
-
-typedef int (*wide_printf)(wchar_t* __restrict, size_t, const wchar_t*__restrict, ...);
-
-inline
-wide_printf
-get_swprintf()
-{
-#ifndef _LIBCPP_MSVCRT
-    return swprintf;
-#else
-    return static_cast<int (__cdecl*)(wchar_t* __restrict, size_t, const wchar_t*__restrict, ...)>(swprintf);
-#endif
-}
-
 }  // unnamed namespace
 
 string to_string(int val)
@@ -412,48 +322,4 @@ string to_string(long double val)
     return as_string(snprintf, initial_string<string, long double>()(), "%Lf", val);
 }
 
-wstring to_wstring(int val)
-{
-    return as_string(get_swprintf(), initial_string<wstring, int>()(), L"%d", val);
-}
-
-wstring to_wstring(unsigned val)
-{
-    return as_string(get_swprintf(), initial_string<wstring, unsigned>()(), L"%u", val);
-}
-
-wstring to_wstring(long val)
-{
-    return as_string(get_swprintf(), initial_string<wstring, long>()(), L"%ld", val);
-}
-
-wstring to_wstring(unsigned long val)
-{
-    return as_string(get_swprintf(), initial_string<wstring, unsigned long>()(), L"%lu", val);
-}
-
-wstring to_wstring(long long val)
-{
-    return as_string(get_swprintf(), initial_string<wstring, long long>()(), L"%lld", val);
-}
-
-wstring to_wstring(unsigned long long val)
-{
-    return as_string(get_swprintf(), initial_string<wstring, unsigned long long>()(), L"%llu", val);
-}
-
-wstring to_wstring(float val)
-{
-    return as_string(get_swprintf(), initial_string<wstring, float>()(), L"%f", val);
-}
-
-wstring to_wstring(double val)
-{
-    return as_string(get_swprintf(), initial_string<wstring, double>()(), L"%f", val);
-}
-
-wstring to_wstring(long double val)
-{
-    return as_string(get_swprintf(), initial_string<wstring, long double>()(), L"%Lf", val);
-}
 _LIBCPP_END_NAMESPACE_STD
