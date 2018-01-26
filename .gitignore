@@ -43,3 +43,6 @@ output/
 #misc executables
 /sdk/sign_tool/SignTool/sgx_sign
 /sdk/simulation/SEConfigureCPUSVN/linux/sgx_config_cpusvn
+
+#sgx_sdk
+sgxsdk/
