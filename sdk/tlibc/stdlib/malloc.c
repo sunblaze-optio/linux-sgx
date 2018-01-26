@@ -848,7 +848,6 @@ extern "C" {
 #define dlmallinfo             mallinfo
 #define dlposix_memalign       posix_memalign
 #ifdef USE_MALLOC_DEPRECATED
-#define dlposix_memalign       posix_memalign
 #define dlrealloc_in_place     realloc_in_place
 #define dlvalloc               valloc
 #define dlpvalloc              pvalloc
