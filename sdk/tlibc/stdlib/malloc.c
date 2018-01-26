@@ -954,7 +954,7 @@ DLMALLOC_EXPORT void* dlrealloc_in_place(void*, size_t);
 */
 DLMALLOC_EXPORT void* dlmemalign(size_t, size_t);
 
-#ifdef USE_MALLOC_DEPRECATED
+//#ifdef USE_MALLOC_DEPRECATED
 /*
   int posix_memalign(void** pp, size_t alignment, size_t n);
   Allocates a chunk of n bytes, aligned in accord with the alignment
@@ -965,6 +965,7 @@ DLMALLOC_EXPORT void* dlmemalign(size_t, size_t);
 */
 DLMALLOC_EXPORT int dlposix_memalign(void**, size_t, size_t);
 
+#ifdef USE_MALLOC_DEPRECATED
 /*
   valloc(size_t n);
   Equivalent to memalign(pagesize, n), where pagesize is the page
